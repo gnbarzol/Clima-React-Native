@@ -5,12 +5,49 @@ import {
   StyleSheet,
   TextInput,
   TouchableWithoutFeedback,
+  Animated,
+  Alert,
 } from 'react-native';
 import {Picker} from '@react-native-community/picker';
 
-const Formulario = () => {
-  const [pais, setPais] = useState('');
-  const [ciudad, setCiudad] = useState('');
+const Formulario = ({busqueda, setBusqueda, setConsultar}) => {
+  const {ciudad, pais} = busqueda;
+
+  const [animacionBoton] = useState(new Animated.Value(1));
+
+  const inAnimacion = () => {
+    Animated.spring(animacionBoton, {
+      toValue: 0.9,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const outAnimacion = () => {
+    Animated.spring(animacionBoton, {
+      toValue: 1,
+      useNativeDriver: true,
+      //friction: 1 Para controlar el rebote, mientras mas alto menos rebote
+      //tension: 30 Mas alto mas tensa es la animacion.
+    }).start();
+  };
+
+  const animarScala = {
+    transform: [{scale: animacionBoton}],
+  };
+
+  const consultarClima = () => {
+    if (ciudad.trim() === '' || pais.trim() === '') {
+      mostrarAlerta();
+      return;
+    }
+    setConsultar(true);
+  };
+
+  const mostrarAlerta = () => {
+    Alert.alert('Error', 'Agregue una ciudad y país para la búsqueda',
+      [{text: 'Entendido'}]
+    );
+  };
 
   return (
     <>
@@ -19,20 +56,23 @@ const Formulario = () => {
           style={styles.input}
           placeholder="Ciudad"
           placeholderTextColor="#000"
-          onChangeText={texto => setCiudad(texto)}
+          onChangeText={ciudad => setBusqueda({...busqueda, ciudad})}
         />
         <Picker
           selectedValue={pais}
           itemStyle={styles.picker}
-          onValueChange={(itemValue, itemIndex) => setPais(itemValue)}>
+          onValueChange={(pais, itemIndex) => setBusqueda({...busqueda, pais})}>
           <Picker.Item label="- Seleccionar -" value="" />
           <Picker.Item label="Ecuador" value="EC" />
-          <Picker.Item label="Estados Unidos" value="USA" />
+          <Picker.Item label="Estados Unidos" value="US" />
         </Picker>
-        <TouchableWithoutFeedback>
-          <View style={styles.btnConsultar}>
-            <Text style={styles.txtBtn}>Submit</Text>
-          </View>
+        <TouchableWithoutFeedback
+          onPressIn={() => inAnimacion()}
+          onPressOut={() => outAnimacion()}
+          onPress={() => consultarClima()}>
+          <Animated.View style={[styles.btnConsultar, animarScala]}>
+            <Text style={styles.txtBtn}>Buscar clima</Text>
+          </Animated.View>
         </TouchableWithoutFeedback>
       </View>
     </>
@@ -45,14 +85,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     textAlign: 'center',
     fontSize: 20,
-    marginVertical: 10, 
+    marginVertical: 10,
   },
   picker: {
     backgroundColor: '#fff',
     height: 110,
   },
   btnConsultar: {
-    backgroundColor: '#30475e',
+    backgroundColor: '#1b1b2f',
     marginTop: 30,
     padding: 12,
     borderRadius: 10,
@@ -61,6 +101,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 20,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
 });
 
